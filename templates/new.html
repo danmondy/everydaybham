@@ -1,0 +1,22 @@
+{{template "header"}}
+    <h1> add/update event </h1>
+    <form method="post" action="/createedit" name="form">
+      <input type="hidden" name="id" value="{{.ID}}">
+      <div class="form-group">
+	<label for="date">Date</label>
+        <input type="date" name="date" value="{{.Date.Format "2006-01-02"}}">
+      </div>
+      <div class="form-group">
+	<label for="Description">Description</label>
+	<input type="text" name="description" value="{{.Description}}">
+      </div>
+      <div class="form-group">
+	<label for="font">Font</label>
+	<input type="text" name="font" value="{{.Font}}">
+      </div>
+      <div class="form-group">	
+	<input type="submit">
+      </div>
+    </form>
+  </body>
+</html>

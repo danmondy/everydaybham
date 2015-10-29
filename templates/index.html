@@ -1,0 +1,18 @@
+{{template "header"}}
+    <div class="title row">
+      <div class="col-md-12">
+	<img src="/img/logo.png" alt="Everyday Birmingham" width="400px">
+      </div>
+    </div>
+    <div class="row body">
+      <div class="container">
+	<div class="col-md-12 date">	  
+	  <p><h3>{{printf "%s\n" .Date.Month}} {{.Date.Day}}</h3></p>
+	</div>
+	<div class="col-md-12 event" style="font-family:{{.Font}}">
+	  <p><h2>{{.Description}}</h4></p>
+	</div>
+      </div>
+    </div>
+  </body>
+</html>

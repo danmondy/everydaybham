@@ -1,0 +1,40 @@
+body{
+    background-image: url('/img/swirl_pattern.png');
+}
+
+h1{    font-size: 64px; }
+h2{    font-size: 48px; }
+h3{    font-size: 36px; }
+
+.title{
+    font-family: old standard tt, seriff;
+ 
+    padding: 20 0 20 0;
+    color: #fe9f97;
+}
+.title h1 .bham{
+    font-family: abril fatface, sans;
+}
+.body{
+    //background-color: #FFF;
+    padding: 40px 0
+			 
+}
+.event{
+    font-size: 48px;
+    color: #fbae17;
+    font-family: abril fatface, sans;   
+}
+.date{
+    color: #FE9F97;
+    font-family: abril fatface, sans;
+}
+
+.title, .event, .date{    
+    text-align: center
+}
+
+
+
+
+
