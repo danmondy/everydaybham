@@ -6,7 +6,7 @@ import (
 	"strings"
 	"strconv"
 	"errors"
-	
+
 	"github.com/jmoiron/sqlx"
 )
 
@@ -62,7 +62,7 @@ func (e *event) mapRow(r *sqlx.Row) error {
 }
 
 ////////////////////
-//      HELPERS   //
+//     HELPERS    //
 ////////////////////
 
 func timeToString(t time.Time) string {

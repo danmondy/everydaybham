@@ -10,12 +10,14 @@ import (
 	"github.com/gorilla/mux"
 )
 
+//"/"
 func IndexHand(c *context, w http.ResponseWriter, r *http.Request) (int, error) {
 	fmt.Println("Index Handler Reached")
 	fmt.Println(c.event)
 	return c.renderTemplate(w, "index", c.event)
 }
-func NewHand(c *context, w http.ResponseWriter, r *http.Request) (int, error) {
+//"/createedit/{id}" id=new will create a new event object
+func NewEventHand(c *context, w http.ResponseWriter, r *http.Request) (int, error) {
 	if r.Method == "GET" {
 		vars := mux.Vars(r)
 		idstring := vars["id"]
@@ -43,7 +45,7 @@ func NewHand(c *context, w http.ResponseWriter, r *http.Request) (int, error) {
 		event.Description = r.FormValue("description")
 		event.Font = r.FormValue("font")
 		idstring := r.FormValue("id")
-		
+
 		event.Date, _ = stringToTime(r.FormValue("date"))
 		if idstring == "0"{
 			fmt.Println("About to insert:", event)
@@ -55,7 +57,7 @@ func NewHand(c *context, w http.ResponseWriter, r *http.Request) (int, error) {
 		} else {
 			event.ID, _ = strconv.Atoi(idstring)
 			count, err := c.repo.updateEvent(&event)
-			fmt.Println("About to update:", event)	
+			fmt.Println("About to update:", event)
 			if err != nil || count == 0{
 				fmt.Println(count, err)
 				return c.renderTemplate(w, "new", event)

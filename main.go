@@ -29,9 +29,9 @@ type appHandler struct {
 	Ha func(*context, http.ResponseWriter, *http.Request) (int, error)
 }
 
-func main() {	
+func main() {
 	templates := template.Must(template.ParseGlob("templates/*"))
-	
+
 	db, err := sqlx.Connect("sqlite3", "everydaybham.db")
 	if err != nil {
 		panic(err)
@@ -105,7 +105,7 @@ func dailyEvent(c *context) (err error) {
 }
 
 var schema = `
-CREATE TABLE event (    
+CREATE TABLE event (
     id   integer unique not null primary key,
     date text unique,
     description text,
@@ -122,18 +122,19 @@ func initDB(db *sqlx.DB) {
 }
 
 func interactiveConsole(c *context) {
-	
+
 	bio := bufio.NewReader(os.Stdin)
 	for {
 		cmd, _, _ := bio.ReadLine()
+		events := []event{}
 		q, e := c.repo.db.Query(string(cmd))
 		if e != nil {
 			fmt.Println(e)
 		} else {
-			for q.Next(){				
-				fmt.Println(q.Columns)
+			for _, r := q.Next(){
+				e.mapRow(r)
+				fmt.Println(e)
 			}
-			
 		}
 	}
 }
