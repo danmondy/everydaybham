@@ -16,13 +16,14 @@ func IndexHand(c *context, w http.ResponseWriter, r *http.Request) (int, error) 
 	return c.renderTemplate(w, "index", c.event)
 }
 func NewHand(c *context, w http.ResponseWriter, r *http.Request) (int, error) {
-	if r.Method == "GET" {
+	switch r.Method {
+	case "GET":
 		vars := mux.Vars(r)
 		idstring := vars["id"]
 		//Create a new event without an id
 		fmt.Println(idstring)
-		if idstring == "new"{
-			return c.renderTemplate(w, "new", event{Date:time.Now()})
+		if idstring == "new" {
+			return c.renderTemplate(w, "new", event{Date: time.Now()})
 		}
 		//check id param
 		id, err := strconv.Atoi(idstring)
@@ -37,33 +38,33 @@ func NewHand(c *context, w http.ResponseWriter, r *http.Request) (int, error) {
 			return http.StatusInternalServerError, errors.New("We could not find an event with the id specified.")
 		}
 		return c.renderTemplate(w, "new", event)
-	} else if r.Method == "POST" {
+	case "POST":
 		r.ParseForm()
 		event := event{}
 		event.Description = r.FormValue("description")
 		event.Font = r.FormValue("font")
 		idstring := r.FormValue("id")
-		
+
 		event.Date, _ = stringToTime(r.FormValue("date"))
-		if idstring == "0"{
+		if idstring == "0" {
 			fmt.Println("About to insert:", event)
 			count, err := c.repo.insertEvent(&event)
-			if err != nil || count == 0{
+			if err != nil || count == 0 {
 				fmt.Println(err)
 				return c.renderTemplate(w, "new", event)
 			}
 		} else {
 			event.ID, _ = strconv.Atoi(idstring)
 			count, err := c.repo.updateEvent(&event)
-			fmt.Println("About to update:", event)	
-			if err != nil || count == 0{
+			fmt.Println("About to update:", event)
+			if err != nil || count == 0 {
 				fmt.Println(count, err)
 				return c.renderTemplate(w, "new", event)
 			}
 		}
 		http.Redirect(w, r, "/", http.StatusFound)
 		return http.StatusFound, nil
-	} else {
+	default:
 		return http.StatusMethodNotAllowed, errors.New("Bad Method")
 	}
 }

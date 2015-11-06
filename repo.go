@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"time"
+	"log"
 	"strings"
 	"strconv"
 	"errors"
@@ -12,6 +13,22 @@ import (
 
 type repo struct {
 	db *sqlx.DB
+	log *log.Logger
+}
+
+var schema = `CREATE TABLE event (    
+    id integer unique not null primary key,
+    date text unique,
+    description text,
+    font text
+);
+`
+func initDB(db *sqlx.DB) {
+	db.MustExec(schema)
+	tx := db.MustBegin()
+	tx.MustExec("INSERT into event (date, description, font) values ($1, $2, $3)", timeToString(time.Now()), "Do something fun!", "Helvetica")
+	tx.MustExec("INSERT into event (date, description, font) values ($1, $2, $3)", timeToString(time.Now().Add(time.Hour*24)), "Do something Else!", "Helvetica")
+	tx.Commit()
 }
 
 /////////////////////
@@ -25,8 +42,10 @@ func (r repo) getEvent(id int) (e event, err error) {
 }
 func (r repo) getEventByDate(date string) (e event, err error) {
 	e = event{}
+	r.log.Println("select * from event where date = ", date)
 	row := r.db.QueryRowx("SELECT * FROM event where date = $1", date)
 	err = e.mapRow(row)
+	
 	return
 }
 
@@ -66,7 +85,7 @@ func (e *event) mapRow(r *sqlx.Row) error {
 ////////////////////
 
 func timeToString(t time.Time) string {
-	return fmt.Sprintf("%4d-%2d-%2d", t.Year(), t.Month(), t.Day())
+	return fmt.Sprintf("%04d-%02d-%02d", t.Year(), t.Month(), t.Day())
 	//time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, time.UTC)
 	//return t.Format(time.RFC822)
 }

@@ -5,8 +5,9 @@ import (
 	"html/template"
 	"net/http"
 	"os"
+	"log"
 	"time"
-	"bufio"
+	//"bufio"
 
 	"github.com/gorilla/mux"
 	"github.com/jmoiron/sqlx"
@@ -23,23 +24,38 @@ type context struct {
 	repo      *repo
 	templates *template.Template
 	event     event
+	log    *log.Logger
 }
 type appHandler struct {
 	*context
 	Ha func(*context, http.ResponseWriter, *http.Request) (int, error)
 }
 
-func main() {	
+func main() {
+	//delete the datebase
+	if err := os.Remove("./everydaybham.db");err != nil {
+		panic(fmt.Sprintln("ERROR could not remove database:", err))
+	}
+	//parse templates
 	templates := template.Must(template.ParseGlob("templates/*"))
-	
+
+	//create the db
 	db, err := sqlx.Connect("sqlite3", "everydaybham.db")
 	if err != nil {
 		panic(err)
 	}
-	//os.Remove("everydaybham.db")
-	//initDB(db)
-	repo := &repo{db}
-	context := &context{repo, templates, event{}}
+	initDB(db)
+
+	//create logger
+	logger := log.New(os.Stdout, "LOG:", log.Lshortfile)
+	
+	repo := &repo{db, logger}
+	context := &context{repo, templates, event{}, logger}
+
+	//set once at start of program
+	if err := dailyEvent(context); err != nil {
+		panic(err) // panic on startup
+	}
 
 	go updateDaily(context)
 	go interactiveConsole(context)
@@ -83,10 +99,7 @@ func (c *context) renderTemplate(w http.ResponseWriter, tmpl string, model inter
 
 //polls hourly updates between 4 and 5 oclock
 func updateDaily(c *context) {
-	//set once at start of program
-	if err := dailyEvent(c); err != nil {
-		panic(err) // panic on startup
-	}
+
 	for { //loop hourly to set between 4 and 5 am( to account for timezones accross the us.)
 		now := time.Now()
 		fmt.Println(now.Hour())
@@ -104,25 +117,8 @@ func dailyEvent(c *context) (err error) {
 	return
 }
 
-var schema = `
-CREATE TABLE event (    
-    id   integer unique not null primary key,
-    date text unique,
-    description text,
-    font text
-);
-`
-
-func initDB(db *sqlx.DB) {
-	db.MustExec(schema)
-	tx := db.MustBegin()
-	tx.MustExec("INSERT into event (date, description, font) values ($1, $2, $3)", timeToString(time.Now()), "Do something fun!", "Helvetica")
-	tx.MustExec("INSERT into event (date, description, font) values ($1, $2, $3)", timeToString(time.Now().Add(time.Hour*24)), "Do something Else!", "Helvetica")
-	tx.Commit()
-}
-
 func interactiveConsole(c *context) {
-	
+	/*
 	bio := bufio.NewReader(os.Stdin)
 	for {
 		cmd, _, _ := bio.ReadLine()
@@ -135,5 +131,5 @@ func interactiveConsole(c *context) {
 			}
 			
 		}
-	}
+	}*/
 }
