@@ -78,7 +78,7 @@ func (r repo) updateEvent(e *event) (int64, error) {
 
 func (e *event) mapRow(r *sqlx.Row) error {
 	var temp string = ""
-	err := r.Scan(&e.ID, &temp,&e.Title, &e.Description, &e.Font)
+	err := r.Scan(&e.ID, &temp, &e.Title, &e.Description, &e.Font)
 	if err != nil {
 		return err
 	}
@@ -91,26 +91,26 @@ func mapEvents(r *sqlx.Rows) ([]event, error) {
 	for r.Next() {
 		var temp string = ""
 		e := event{}
-		err := r.Scan(&e.ID, &temp,&e.Title, &e.Description, &e.Font)
+		err := r.Scan(&e.ID, &temp, &e.Title, &e.Description, &e.Font)
 		if err != nil {
 			return nil, err
 		}
 		e.Date, err = stringToTime(temp)
 		events = append(events, e)
 	}
-		/*doesn't work
-		e := event{}
-		err := e.mapRow(r)
-		if err != nil {
-			return nil, err
-		}
-		events = append(events, e)
-		*/					
+	/*doesn't work
+	e := event{}
+	err := e.mapRow(r)
+	if err != nil {
+		return nil, err
+	}
+	events = append(events, e)
+	*/
 	return events, nil
 }
 
 ////////////////////
-//      HELPERS   //
+//     HELPERS    //
 ////////////////////
 
 func timeToString(t time.Time) string {
