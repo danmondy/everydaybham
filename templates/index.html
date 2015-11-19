@@ -4,14 +4,16 @@
 	<img src="/img/logo.png" alt="Everyday Birmingham" width="400px">
       </div>
     </div>
-    <div class="row body">
-      <div class="container">
-	<div class="col-md-12 date">	  
-	  <p><h3>{{printf "%s\n" .Date.Month}} {{.Date.Day}}</h3></p>
-	</div>
+    
+    <div class="container body">
+      <div class="col-md-1 col-md-offset-1 date">	  
+	<p><h3>{{PrettyMonth .Date.Month | printf "%s\n"}}</h3>
+	  <h3> {{.Date.Day}}</h3></p>
+      </div>
+      <div class="row">	
 	<div class="col-md-12 event" style="font-family:{{.Font}}">
 	  <p><h2>{{.Description}}</h4></p>
-	</div>
+        </div>     
       </div>
     </div>
   </body>

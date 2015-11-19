@@ -6,6 +6,10 @@ h1{    font-size: 64px; }
 h2{    font-size: 48px; }
 h3{    font-size: 36px; }
 
+.container{
+    position:relative;
+    width:630px;
+}
 .title{
     font-family: old standard tt, seriff;
  
@@ -26,6 +30,13 @@ h3{    font-size: 36px; }
     font-family: abril fatface, sans;   
 }
 .date{
+    position:absolute;
+    left:-100px;
+    height:-10px;
+    background:url('/img/al_wc.png') no-repeat;
+    background-size:140px;
+    width:150px;
+    height:200px;
     color: #FE9F97;
     font-family: abril fatface, sans;
 }

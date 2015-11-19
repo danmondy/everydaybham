@@ -1,0 +1,31 @@
+{{template "header"}}
+<style>
+  h1{
+  padding:16px 0;
+  }
+  .form-group{
+  padding:8px 0;
+  }
+</style>
+
+<div class="container" style="width:370px">
+    <p>{{.}}</p>
+    <!--TODO: if no id is present, show add, otherwise show edit -->
+    <h1>user login</h1>
+    <form method="post" action="/login" name="form">
+      <input type="hidden" name="url" value="{{.}}">
+      <div class="form-group">	
+        <input type="email" class="form-control" name="email" placeholder="Email Address">
+      </div>
+      <div class="form-group">	
+	<input type="password" class="form-control" name="password" placeholder="Password">
+      </div>
+      <div class="form-group">	
+	<input type="submit" class="btn btn-success" value="Log in">
+      </div>
+    </form>
+</div>
+
+
+    
+{{template "footer"}}

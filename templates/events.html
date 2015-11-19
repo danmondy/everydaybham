@@ -1,0 +1,19 @@
+{{template "header"}}
+
+<div class="container">
+    <!--TODO: if no id is present, show add, otherwise show edit -->
+
+    <h1>events <a href="/events/createedit">+</a></h1>
+    <table>      
+      {{range .}}
+      <tr>
+	<td><a href="/events/createedit/{{.ID}}">{{.Description}}</a></td>
+	<td>{{.Date}}</td>
+      </tr>
+      {{end}}
+    </table>
+</div>
+
+
+    
+{{template "footer"}}

@@ -1,33 +1,34 @@
 package main
 
 import (
-	"fmt"
-	"time"
-	"log"
-	"strings"
-	"strconv"
 	"errors"
-	
+	"fmt"
+	"log"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/jmoiron/sqlx"
 )
 
 type repo struct {
-	db *sqlx.DB
+	db  *sqlx.DB
 	log *log.Logger
 }
 
 var schema = `CREATE TABLE event (    
     id integer unique not null primary key,
     date text unique,
+    title text,
     description text,
     font text
-);
-`
+);`
+
 func initDB(db *sqlx.DB) {
 	db.MustExec(schema)
 	tx := db.MustBegin()
-	tx.MustExec("INSERT into event (date, description, font) values ($1, $2, $3)", timeToString(time.Now()), "Do something fun!", "Helvetica")
-	tx.MustExec("INSERT into event (date, description, font) values ($1, $2, $3)", timeToString(time.Now().Add(time.Hour*24)), "Do something Else!", "Helvetica")
+	tx.MustExec("INSERT into event (date, title, description, font) values ($1, $2, $3, $4)", timeToString(time.Now()), "Do something fun!", "description goes here", "Helvetica")
+	tx.MustExec("INSERT into event (date, title, description, font) values ($1, $2, $3, $4)", timeToString(time.Now().Add(time.Hour*24)), "Do something Else!", "discription goes here", "Helvetica")
 	tx.Commit()
 }
 
@@ -45,13 +46,16 @@ func (r repo) getEventByDate(date string) (e event, err error) {
 	r.log.Println("select * from event where date = ", date)
 	row := r.db.QueryRowx("SELECT * FROM event where date = $1", date)
 	err = e.mapRow(row)
-	
 	return
 }
+func (r repo) getEventsAfter(t time.Time) ([]event, error) {
+	d := timeToString(t)
+	rows, _ := r.db.Queryx("SELECT * FROM event where date >= $1", d)
+	defer rows.Close()
+	return mapEvents(rows)
+}
 
-//func (r repo) getEvents(time string)
 func (r repo) insertEvent(e *event) (int64, error) {
-
 	res, err := r.db.Exec("INSERT into event (date, description, font) VALUES ($1, $2, $3)", timeToString(e.Date), e.Description, e.Font)
 	if err != nil {
 		r, _ := res.RowsAffected()
@@ -63,6 +67,7 @@ func (r repo) insertEvent(e *event) (int64, error) {
 	}
 	return res.RowsAffected()
 }
+
 func (r repo) updateEvent(e *event) (int64, error) {
 	result, err := r.db.Exec("UPDATE event set date=$1, description=$2, font=$3 where id=$4", timeToString(e.Date), e.Description, e.Font, e.ID)
 	if err != nil {
@@ -70,14 +75,38 @@ func (r repo) updateEvent(e *event) (int64, error) {
 	}
 	return result.RowsAffected()
 }
+
 func (e *event) mapRow(r *sqlx.Row) error {
 	var temp string = ""
-	err := r.Scan(&e.ID, &temp, &e.Description, &e.Font)
+	err := r.Scan(&e.ID, &temp,&e.Title, &e.Description, &e.Font)
 	if err != nil {
 		return err
 	}
 	e.Date, err = stringToTime(temp)
 	return err //reutrn the error nil or not
+}
+
+func mapEvents(r *sqlx.Rows) ([]event, error) {
+	events := make([]event, 0)
+	for r.Next() {
+		var temp string = ""
+		e := event{}
+		err := r.Scan(&e.ID, &temp,&e.Title, &e.Description, &e.Font)
+		if err != nil {
+			return nil, err
+		}
+		e.Date, err = stringToTime(temp)
+		events = append(events, e)
+	}
+		/*doesn't work
+		e := event{}
+		err := e.mapRow(r)
+		if err != nil {
+			return nil, err
+		}
+		events = append(events, e)
+		*/					
+	return events, nil
 }
 
 ////////////////////
@@ -100,18 +129,15 @@ func stringToTime(s string) (time.Time, error) {
 	return time.Date(y, time.Month(m), d, 0, 0, 0, 0, time.UTC), nil
 	//return time.Parse(time.RFC822, s)
 }
+func getUID() int {
+	t := time.Now()
+	id, err := strconv.Atoi(fmt.Sprintf("%04d%02d%02d%02d%02d%02d", t.Year(), int(t.Month()), t.Day(), t.Hour()))
+	if err != nil {
+		return -1
+	}
+	return id
+}
 
 /*
-func MapUsers(r *sql.Rows)([]User, error){
-	var users []User
-	for r.Next(){
-		var u User
-		err := r.Scan(&u.Id, &u.Email, &u.Hashword, &u.Rank, &u.Since)
-		if err != nil{
-			return nil, err
-		}
-		users = append(users, u)
-	}
-	return users, nil
-}
-*/
+
+ */

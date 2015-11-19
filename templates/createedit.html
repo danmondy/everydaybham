@@ -3,7 +3,7 @@
 <div class="container">
     <!--TODO: if no id is present, show add, otherwise show edit -->
     <h1> add/update event </h1>
-    <form method="post" action="/createedit" name="form">
+    <form method="post" action="/events/createedit" name="form">
       <input type="hidden" name="id" value="{{.ID}}">
       <div class="form-group">
 	<label for="date">Date</label>

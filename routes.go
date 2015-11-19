@@ -6,30 +6,60 @@ import (
 	"net/http"
 	"strconv"
 	"time"
-
 	"github.com/gorilla/mux"
 )
+var authToken string
 
-func IndexHand(c *context, w http.ResponseWriter, r *http.Request) (int, error) {
+func LoginHandler(c *context, w http.ResponseWriter, r *http.Request) (int, error){
+	switch r.Method {
+	case "GET":
+		url := ""
+		url = r.URL.Query()["url"][0]
+		
+		return c.renderTemplate(w, "login", url)
+	case "POST":
+		if err := r.ParseForm(); err != nil {
+			return c.renderTemplate(w, "login", err.Error())
+		}
+		email := r.FormValue("email")
+		pword := r.FormValue("password")
+		url := r.FormValue("url")
+		//TODO: encrypt password
+		if email == "danmondy@gmail.com" && pword == "unsecure" {
+			cookie := &http.Cookie{}
+			cookie.Name = "authtoken"
+			authToken = time.Now().Format(time.RFC822) //TODO: add random characters to end
+			cookie.Value = authToken // needs mutex
+			cookie.Expires = time.Now().Add(time.Hour)
+			http.SetCookie(w, cookie)
+			if url != ""{
+				http.Redirect(w, r, url, http.StatusSeeOther)
+			}
+			http.Redirect(w, r, "/events", http.StatusSeeOther)
+			return http.StatusSeeOther, nil
+		}else{
+			return c.renderTemplate(w, "login", "Username or password not found.")
+		}		
+	}
+	return http.StatusMethodNotAllowed, nil
+}
+func IndexHandler(c *context, w http.ResponseWriter, r *http.Request) (int, error) {
 	fmt.Println("Index Handler Reached")
 	fmt.Println(c.event)
 	return c.renderTemplate(w, "index", c.event)
 }
-func NewHand(c *context, w http.ResponseWriter, r *http.Request) (int, error) {
+func EventHandler(c *context, w http.ResponseWriter, r *http.Request) (int, error) {
 	switch r.Method {
 	case "GET":
+		c.log.Println("get reached")
 		vars := mux.Vars(r)
 		idstring := vars["id"]
 		//Create a new event without an id
-		fmt.Println(idstring)
-		if idstring == "new" {
-			return c.renderTemplate(w, "new", event{Date: time.Now()})
-		}
-		//check id param
+		fmt.Println(idstring)					
+		
 		id, err := strconv.Atoi(idstring)
-		if err != nil {
-			fmt.Println(id, err)
-			return http.StatusNotAcceptable, err
+		if err != nil {//if the id does not convert assume they are creating a new entry
+			return c.renderTemplate(w, "createedit", event{Date: time.Now()})		
 		}
 		//retrieve existing event for update
 		event, err := c.repo.getEvent(id)
@@ -37,8 +67,9 @@ func NewHand(c *context, w http.ResponseWriter, r *http.Request) (int, error) {
 			fmt.Println(id, err)
 			return http.StatusInternalServerError, errors.New("We could not find an event with the id specified.")
 		}
-		return c.renderTemplate(w, "new", event)
+		return c.renderTemplate(w, "createedit", event)
 	case "POST":
+		c.log.Println("post reached")
 		r.ParseForm()
 		event := event{}
 		event.Description = r.FormValue("description")
@@ -50,27 +81,29 @@ func NewHand(c *context, w http.ResponseWriter, r *http.Request) (int, error) {
 			fmt.Println("About to insert:", event)
 			count, err := c.repo.insertEvent(&event)
 			if err != nil || count == 0 {
-				fmt.Println(err)
-				return c.renderTemplate(w, "new", event)
+				c.log.Println(err)
+				
 			}
 		} else {
 			event.ID, _ = strconv.Atoi(idstring)
 			count, err := c.repo.updateEvent(&event)
 			fmt.Println("About to update:", event)
 			if err != nil || count == 0 {
-				fmt.Println(count, err)
-				return c.renderTemplate(w, "new", event)
+				c.log.Println(count, err)				
 			}
 		}
-		http.Redirect(w, r, "/", http.StatusFound)
-		return http.StatusFound, nil
+		return c.renderTemplate(w, "createedit", event)				
 	default:
 		return http.StatusMethodNotAllowed, errors.New("Bad Method")
 	}
 }
-func EditHand(c *context, w http.ResponseWriter, r *http.Request) (int, error) {
-	return 0, nil
+func EventsHandler(c *context, w http.ResponseWriter, r *http.Request) (int, error) {
+	events, err := c.repo.getEventsAfter(time.Now())
+	if err != nil {
+		return http.StatusInternalServerError, errors.New("Error retrieving events")
+	}
+	return c.renderTemplate(w, "events", events)
 }
-func NotFoundHand(c *context, w http.ResponseWriter, r *http.Request) (int, error) {
+func NotFoundHandler(c *context, w http.ResponseWriter, r *http.Request) (int, error) {
 	return http.StatusNotFound, errors.New("Not found.")
 }
